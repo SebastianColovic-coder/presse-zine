@@ -220,6 +220,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
         <option value="600">600 dpi · pro</option>
       </select></label>
     <span class="spacer"></span>
+    <button type="button" class="btn" id="btnNew">Nouveau</button>
     <button type="button" class="btn" id="btnVer">Versions</button>
     <button type="button" class="btn" id="btnPrint">Impression</button>
     <button type="button" class="btn" id="btnSettings">Réglages</button>
@@ -1904,6 +1905,25 @@ button, input, select, textarea { font: inherit; color: inherit; }
         return saveRecord('v' + Date.now(), 'Avant d’ouvrir un projet (' + stamp() + ')', true).catch(function () {}).then(function () { return applyData(h.data, files); });
       });
     }).then(function () { vmsg('Projet ouvert.'); listVersions(); }).catch(function () { vmsg('Ce fichier n’est pas un projet .zine valide.'); });
+  });
+  /* new project: asks twice, keeps the current work as a version first */
+  var newT = null;
+  $('btnNew').addEventListener('click', function () {
+    var b = $('btnNew');
+    if (!newT) {
+      b.textContent = 'Confirmer ?'; b.classList.add('primary');
+      newT = setTimeout(function () { newT = null; b.textContent = 'Nouveau'; b.classList.remove('primary'); }, 4000);
+      setStatus('Clique encore sur « Confirmer ? » pour repartir de zéro. Ton travail actuel est gardé dans Versions.');
+      return;
+    }
+    clearTimeout(newT); newT = null; b.textContent = 'Nouveau'; b.classList.remove('primary');
+    var has = S.pages.some(function (p) { return p.photos.length || p.text.trim() && p !== S.pages[0]; }) || S.pages[0].text !== 'TITRE';
+    (has ? saveRecord('v' + Date.now(), 'Avant nouveau projet (' + stamp() + ')', true) : Promise.resolve()).catch(function () {}).then(function () {
+      var pages = []; for (var q = 0; q < MAXP; q++) pages.push(newPage());
+      Object.assign(pages[0], { bg: 'ink', text: 'TITRE', font: 'livre', size: 5.5, tcolor: 'paper', h: 'left', v: 'top' });
+      S.pages = pages; S.title = 'Mon zine'; S.n = 8; S.sel = 0; S.sheet = 0; S.side = 0; selPhoto = null; selText = null;
+      rebuild(); setStatus('Nouveau projet. L’ancien est dans Versions.');
+    });
   });
   /* restore the work in progress */
   (function () {
