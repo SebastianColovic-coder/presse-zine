@@ -1,7 +1,7 @@
 {
-  "name": "Presse Zine",
-  "short_name": "Presse Zine",
-  "description": "Éditeur de zines et de livres photo, export PDF pour l'imprimeur.",
+  "name": "Maquette",
+  "short_name": "Maquette",
+  "description": "Éditeur de livres photo d'artiste, export PDF pour l'imprimeur.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Éditeur de zines et de livres photo : pages libres, photos, texte, noir et blanc avec grain, export PDF jusqu’à 600 dpi. Tout reste dans ton navigateur.">
+<meta name="description" content="Maquette : éditeur de livres photo d’artiste : pages libres, photos, texte, noir et blanc avec grain, export PDF jusqu’à 600 dpi. Tout reste dans ton navigateur.">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#121312">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Presse Zine">
+<meta name="apple-mobile-web-app-title" content="Maquette">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
 <style>:root{color-scheme:light}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
-<title>Presse Zine</title>
+<title>Maquette</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=Special+Elite&family=Inter+Tight:wght@300;500;700&family=Instrument+Serif&display=swap">
 <style>
 /* Layout: top bar, a left rail of spreads, a dark stage showing the selected spread large, a page-options bar, one editor per page, footer. Photocopy-shop palette: toner black, cool paper grey, one safelight red. */
@@ -200,7 +200,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 <body>
 <div class="app">
   <header class="bar">
-    <h1 class="brand">Presse Zine</h1>
+    <h1 class="brand">Maquette</h1>
     <label class="bf"><span class="gl">Papier</span>
       <select id="paper">
         <option value="A4">A4</option>
@@ -239,11 +239,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
     <button type="button" class="btn" id="btnPrint">Impression</button>
     <button type="button" class="btn" id="btnSettings">Réglages</button>
     <button type="button" class="btn" id="btnPreview">Aperçu</button>
-    <button type="button" class="btn primary js-pdf" disabled>Télécharger le zine</button>
+    <button type="button" class="btn primary js-pdf" disabled>Télécharger le livre</button>
   </header>
 
   <div class="main">
-    <nav class="rail" id="rail" aria-label="Pages du zine"></nav>
+    <nav class="rail" id="rail" aria-label="Pages du livre"></nav>
     <div class="stagecol">
       <div class="stage" id="stage"><canvas id="stageCanvas" aria-label="Aperçu de la double page. Clique une page vide pour ajouter une photo, glisse pour cadrer, molette pour zoomer."></canvas></div>
       <div class="optbar">
@@ -258,7 +258,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   </div>
 
   <footer class="foot">
-    <div class="fl">© 2026 Presse Zine · <button type="button" class="linkbtn" id="lnkFold">Comment plier</button> · <button type="button" class="linkbtn" id="lnkSettings">Réglages</button></div>
+    <div class="fl">© 2026 Maquette · <button type="button" class="linkbtn" id="lnkFold">Comment plier</button> · <button type="button" class="linkbtn" id="lnkSettings">Réglages</button></div>
     <div class="fr"><span class="js-status" id="status" role="status" aria-live="polite">Connexion à l'export…</span> · Tout reste dans ton navigateur</div>
   </footer>
 </div>
@@ -289,7 +289,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 <div class="ov" id="ovSet" hidden>
   <div class="dlg small" role="dialog" aria-modal="true" aria-labelledby="h-set">
     <div class="dh"><h2 id="h-set">Réglages</h2><button type="button" class="btn small" data-close>Fermer</button></div>
-    <div class="field"><label class="gl" for="title">Titre (nom du fichier)</label><input id="title" type="text" value="Mon zine" maxlength="60" autocomplete="off"></div>
+    <div class="field"><label class="gl" for="title">Titre (nom du fichier)</label><input id="title" type="text" value="Mon livre" maxlength="60" autocomplete="off"></div>
     <div class="field">
       <label class="gl lbl" for="margin"><span>Marge</span><span id="marginOut">6 mm</span></label>
       <input id="margin" type="range" min="0" max="15" step="1" value="6">
@@ -336,12 +336,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
       <button type="button" class="btn primary" id="btnVerSave">Enregistrer une version</button></div>
     <div id="verList" class="verlist"></div>
     <div class="field" style="margin-top:14px"><span class="gl">Sauvegarde dans un fichier</span>
-      <div class="verbtns"><button type="button" class="btn small" id="btnProjOut">Exporter le projet (.zine)</button><button type="button" class="btn small" id="btnProjIn">Ouvrir un projet</button></div>
+      <div class="verbtns"><button type="button" class="btn small" id="btnProjOut">Exporter le projet (.maquette)</button><button type="button" class="btn small" id="btnProjIn">Ouvrir un projet</button></div>
       <p class="hint">Le fichier contient tes photos : garde-le ailleurs que dans le navigateur, ou ouvre-le sur un autre ordinateur.</p></div>
     <p class="hint" id="verStatus" role="status"></p>
   </div>
 </div>
-<input type="file" id="projFile" accept=".zine,application/octet-stream" hidden>
+<input type="file" id="projFile" accept=".maquette,.zine,application/octet-stream" hidden>
 
 <div class="ov" id="ovFold" hidden>
   <div class="dlg small" role="dialog" aria-modal="true" aria-labelledby="h-fold">
@@ -377,7 +377,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     return { photos: [], bg: 'paper', text: '', font: 'machine', size: 5.5, tcolor: 'ink', topacity: 100,
       h: 'center', v: 'middle', tox: 0, toy: 0, merge: false };
   }
-  var S = { title: 'Mon zine', paper: 'A4', mode: 'booklet', n: 8, margin: 6, number: false, guides: false,
+  var S = { title: 'Mon livre', paper: 'A4', mode: 'booklet', n: 8, margin: 6, number: false, guides: false,
     dpi: 300, jq: .92, expFmt: 'impose', bleed: 3, marks: false, binding: 'staple', spine: 4, spineText: true, sel: 0, sheet: 0, side: 0, pages: [] };
   for (var q = 0; q < MAXP; q++) S.pages.push(newPage());
   Object.assign(S.pages[0], { bg: 'ink', text: 'TITRE', font: 'livre', size: 5.5, tcolor: 'paper', h: 'left', v: 'top' });
@@ -1489,8 +1489,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
     $('btnJpg').disabled = !ok;
   }
   function slug() {
-    var s = (S.title || 'zine').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    return s || 'zine';
+    var s = (S.title || 'livre').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return s || 'livre';
   }
   function tick() { return new Promise(function (r) { setTimeout(r, 20); }); }
   function fontsReady() {
@@ -1902,7 +1902,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     var head = new TextEncoder().encode(JSON.stringify({ data: snap.data, blobs: metas })), len = new Uint8Array(4);
     new DataView(len.buffer).setUint32(0, head.length);
     parts.push(len, head); keys.forEach(function (k) { parts.push(snap.blobs[k]); });
-    dl.save({ filename: slug() + '.zine', data: new Blob(parts, { type: 'application/octet-stream' }) })
+    dl.save({ filename: slug() + '.maquette', data: new Blob(parts, { type: 'application/octet-stream' }) })
       .then(function () { vmsg('Projet enregistré.'); }).catch(function (e) { vmsg(explain(e)); });
   });
   $('btnProjIn').addEventListener('click', function () { $('projFile').click(); });
@@ -1918,7 +1918,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
         });
         return saveRecord('v' + Date.now(), 'Avant d’ouvrir un projet (' + stamp() + ')', true).catch(function () {}).then(function () { return applyData(h.data, files); });
       });
-    }).then(function () { vmsg('Projet ouvert.'); listVersions(); }).catch(function () { vmsg('Ce fichier n’est pas un projet .zine valide.'); });
+    }).then(function () { vmsg('Projet ouvert.'); listVersions(); }).catch(function () { vmsg('Ce fichier n’est pas un projet .maquette valide.'); });
   });
   /* new project: asks twice, keeps the current work as a version first */
   var newT = null;
@@ -1935,7 +1935,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     (has ? saveRecord('v' + Date.now(), 'Avant nouveau projet (' + stamp() + ')', true) : Promise.resolve()).catch(function () {}).then(function () {
       var pages = []; for (var q = 0; q < MAXP; q++) pages.push(newPage());
       Object.assign(pages[0], { bg: 'ink', text: 'TITRE', font: 'livre', size: 5.5, tcolor: 'paper', h: 'left', v: 'top' });
-      S.pages = pages; S.title = 'Mon zine'; S.n = 8; S.sel = 0; S.sheet = 0; S.side = 0; selPhoto = null; selText = null;
+      S.pages = pages; S.title = 'Mon livre'; S.n = 8; S.sel = 0; S.sheet = 0; S.side = 0; selPhoto = null; selText = null;
       rebuild(); setStatus('Nouveau projet. L’ancien est dans Versions.');
     });
   });
