@@ -147,6 +147,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chk { display: flex; gap: 8px; align-items: center; cursor: pointer; margin-bottom: 8px; }
 .chk input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
 .hint { margin: 0; font-size: 12.5px; color: var(--muted); }
+.verlist { display: grid; gap: 8px; }
+.verrow { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; border: 1px solid var(--line); padding: 6px; }
+.verrow img { width: 44px; height: auto; display: block; background: var(--bg); }
+.verrow b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.verrow span { font-size: 12px; color: var(--muted); }
+.verbtns { display: flex; gap: 6px; flex-wrap: wrap; }
+.ckrow.low { color: var(--accent); font-weight: 600; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .chip { border: 1px solid var(--ink); background: var(--bg); padding: 4px 10px; font: 500 12px var(--f-mono); cursor: pointer; border-radius: 2px; }
 .chip[aria-pressed=true] { background: var(--ink); color: var(--bg); }
@@ -204,6 +211,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
       <select id="expFmt">
         <option value="impose">Livret à imprimer</option>
         <option value="spreads">Doubles pages (lecture)</option>
+        <option value="pages">Pages à la suite (imprimeur)</option>
       </select></label>
     <label class="bf"><span class="gl">Résolution</span>
       <select id="dpi">
@@ -212,6 +220,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
         <option value="600">600 dpi · pro</option>
       </select></label>
     <span class="spacer"></span>
+    <button type="button" class="btn" id="btnVer">Versions</button>
+    <button type="button" class="btn" id="btnPrint">Impression</button>
     <button type="button" class="btn" id="btnSettings">Réglages</button>
     <button type="button" class="btn" id="btnPreview">Aperçu</button>
     <button type="button" class="btn primary js-pdf" disabled>Télécharger le zine</button>
@@ -280,6 +290,44 @@ button, input, select, textarea { font: inherit; color: inherit; }
   </div>
 </div>
 
+<div class="ov" id="ovPrint" hidden>
+  <div class="dlg small" role="dialog" aria-modal="true" aria-labelledby="h-print">
+    <div class="dh"><h2 id="h-print">Préparer l’impression</h2><button type="button" class="btn small" data-close>Fermer</button></div>
+    <div class="field"><label class="gl" for="binding">Reliure</label>
+      <select id="binding"><option value="staple">Agrafée (couverture dans le même PDF)</option><option value="perfect">Dos carré collé (couverture à part, avec dos)</option></select>
+      <p class="hint" id="bindNote"></p></div>
+    <div class="field"><label class="gl" for="bleed">Fond perdu</label>
+      <select id="bleed"><option value="0">Aucun (format fini exact)</option><option value="3">3 mm (standard)</option><option value="5">5 mm</option></select>
+      <p class="hint">Les bords sont prolongés (effet miroir) pour que la coupe ne laisse pas de liseré blanc.</p></div>
+    <label class="chk"><input type="checkbox" id="marks"> Traits de coupe</label>
+    <div id="spineBox">
+      <div class="field"><label class="gl lbl" for="spine"><span>Épaisseur du dos</span><span id="spineOut">4 mm</span></label>
+        <input id="spine" type="range" min="1" max="30" step="0.5" value="4">
+        <p class="hint">Donnée par l’imprimeur selon le papier et le nombre de pages.</p></div>
+      <label class="chk"><input type="checkbox" id="spineText"> Titre sur le dos</label>
+    </div>
+    <p class="hint" id="printSum" style="margin:6px 0 12px"></p>
+    <p class="hint" id="printWarn" style="margin:0 0 12px;color:var(--accent)"></p>
+    <div class="field"><button type="button" class="btn" id="btnCheck">Vérifier la résolution des photos</button><div id="checkOut" class="hint"></div></div>
+    <p class="hint">Le PDF est en RVB (JPEG). Demande à l’imprimeur s’il convertit en CMJN lui-même, et quel profil il utilise (souvent FOGRA39 ou FOGRA51).</p>
+  </div>
+</div>
+
+<div class="ov" id="ovVer" hidden>
+  <div class="dlg small" role="dialog" aria-modal="true" aria-labelledby="h-ver">
+    <div class="dh"><h2 id="h-ver">Versions</h2><button type="button" class="btn small" data-close>Fermer</button></div>
+    <p class="hint" style="margin-bottom:10px">Ton travail en cours est gardé automatiquement dans ce navigateur. Enregistre une version avant un gros changement pour pouvoir y revenir.</p>
+    <div class="field"><label class="gl" for="verName">Nom de la version</label><input id="verName" type="text" maxlength="60" autocomplete="off" placeholder="ex. Maquette 1, avant l’imprimeur">
+      <button type="button" class="btn primary" id="btnVerSave">Enregistrer une version</button></div>
+    <div id="verList" class="verlist"></div>
+    <div class="field" style="margin-top:14px"><span class="gl">Sauvegarde dans un fichier</span>
+      <div class="verbtns"><button type="button" class="btn small" id="btnProjOut">Exporter le projet (.zine)</button><button type="button" class="btn small" id="btnProjIn">Ouvrir un projet</button></div>
+      <p class="hint">Le fichier contient tes photos : garde-le ailleurs que dans le navigateur, ou ouvre-le sur un autre ordinateur.</p></div>
+    <p class="hint" id="verStatus" role="status"></p>
+  </div>
+</div>
+<input type="file" id="projFile" accept=".zine,application/octet-stream" hidden>
+
 <div class="ov" id="ovFold" hidden>
   <div class="dlg small" role="dialog" aria-modal="true" aria-labelledby="h-fold">
     <div class="dh"><h2 id="h-fold">Comment imprimer et plier</h2><button type="button" class="btn small" data-close>Fermer</button></div>
@@ -315,7 +363,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
       h: 'center', v: 'middle', tox: 0, toy: 0, merge: false };
   }
   var S = { title: 'Mon zine', paper: 'A4', mode: 'booklet', n: 8, margin: 6, number: false, guides: false,
-    dpi: 300, jq: .92, expFmt: 'impose', sel: 0, sheet: 0, side: 0, pages: [] };
+    dpi: 300, jq: .92, expFmt: 'impose', bleed: 3, marks: false, binding: 'staple', spine: 4, spineText: true, sel: 0, sheet: 0, side: 0, pages: [] };
   for (var q = 0; q < MAXP; q++) S.pages.push(newPage());
   Object.assign(S.pages[0], { bg: 'ink', text: 'TITRE', font: 'livre', size: 5.5, tcolor: 'paper', h: 'left', v: 'top' });
 
@@ -332,14 +380,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
       S.number = !!p.number; S.guides = !!p.guides;
       if (p.dpi === 150 || p.dpi === 300 || p.dpi === 600) S.dpi = p.dpi;
       if (p.jq === 1 || p.jq === .92) S.jq = p.jq;
-      if (p.expFmt === 'spreads' || p.expFmt === 'impose') S.expFmt = p.expFmt;
+      if (p.expFmt === 'spreads' || p.expFmt === 'impose' || p.expFmt === 'pages') S.expFmt = p.expFmt;
       if (typeof p.title === 'string') S.title = p.title.slice(0, 60);
+      if (p.bleed === 0 || p.bleed === 3 || p.bleed === 5) S.bleed = p.bleed;
+      S.marks = !!p.marks; S.spineText = p.spineText !== false;
+      if (p.binding === 'staple' || p.binding === 'perfect') S.binding = p.binding;
+      if (typeof p.spine === 'number') S.spine = Math.max(0, Math.min(40, p.spine));
     } catch (e) { /* storage unavailable */ }
   }
   function savePrefs() {
     try {
       localStorage.setItem(PREF, JSON.stringify({ paper: S.paper, mode: S.mode, n: S.n, margin: S.margin,
-        number: S.number, guides: S.guides, dpi: S.dpi, title: S.title, expFmt: S.expFmt, jq: S.jq }));
+        number: S.number, guides: S.guides, dpi: S.dpi, title: S.title, expFmt: S.expFmt, jq: S.jq,
+        bleed: S.bleed, marks: S.marks, binding: S.binding, spine: S.spine, spineText: S.spineText }));
     } catch (e) { /* ignore */ }
   }
   function fixCount() {
@@ -375,7 +428,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
     }
     return out;
   }
-  function expMode() { return (S.mode === 'booklet' && S.expFmt === 'spreads') ? 'spreads' : 'impose'; }
+  function expMode() { return (S.mode === 'booklet' && (S.expFmt === 'spreads' || S.expFmt === 'pages')) ? S.expFmt : 'impose'; }
+  function unitMode() { return expMode() !== 'impose'; }
   function fmt(v) { return String(Math.round(v * 10) / 10).replace('.', ','); }
 
   /* units: what the rail shows (cover, spreads, back cover) */
@@ -1154,7 +1208,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
   /* ---------- photos ---------- */
   function makePhoto(src, name, file) {
-    return { src: src, name: name, file: file || null, hi: null, fit: 'cover', zoom: 1, px: .5, py: .5, bw: false, contrast: 0, grain: 0, opacity: 100, bleed: false };
+    return { src: src, ow: (src && src.ow) || (src && src.width) || 0, name: name, file: file || null, hi: null, fit: 'cover', zoom: 1, px: .5, py: .5, bw: false, contrast: 0, grain: 0, opacity: 100, bleed: false };
   }
   function loadImage(file) {
     var p;
@@ -1170,6 +1224,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
       var k = Math.min(1, 3200 / Math.max(w, h)), c = mkCanvas(w * k, h * k);
       c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
       if (bmp.close) bmp.close();
+      c.ow = w; c.oh = h;
       return c;
     });
   }
@@ -1237,7 +1292,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     var g = groups(), cont = $('chips');
     cont.innerHTML = '';
     if (S.sheet >= g.length) S.sheet = 0;
-    cont.hidden = g.length < 2 || expMode() === 'spreads';
+    cont.hidden = g.length < 2 || unitMode();
     g.forEach(function (grp, i) {
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'chip'; b.textContent = grp.label;
@@ -1246,7 +1301,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
       cont.appendChild(b);
     });
     var two = g[S.sheet] && g[S.sheet].sides.length > 1;
-    $('sideRow').hidden = !two || expMode() === 'spreads';
+    $('sideRow').hidden = !two || unitMode();
     if (!two) S.side = 0;
     setRadio('side', S.side);
   }
@@ -1255,7 +1310,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     var grp = g[S.sheet]; return { grp: grp, side: grp.sides[Math.min(S.side, grp.sides.length - 1)] };
   }
   function renderSheet() {
-    if (expMode() === 'spreads') {
+    if (unitMode()) {
       var us = unitOf(S.sel), dd = dims(), cvs = $('sheetCanvas');
       var cssMax = Math.min((cvs.parentNode.clientWidth - 32) || 600, 1000);
       var ratio = dd.page[1] / dd.page[0];
@@ -1265,7 +1320,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
       cvs.style.width = Math.round(rr.canvas.width / DPR) + 'px';
       cvs.getContext('2d').drawImage(rr.canvas, 0, 0);
       $('sheetTitle').textContent = '· ' + unitLabel(us);
-      $('sheetNote').textContent = 'Ce que contiendra cette page du PDF. Choisis une autre double page dans la colonne de gauche.';
+      $('sheetNote').textContent = expMode() === 'pages'
+        ? 'Le PDF contiendra ces pages une par une, à la suite des autres. Une photo fusionnée est coupée au pli, chaque moitié sur sa page.'
+        : 'Ce que contiendra cette page du PDF. Choisis une autre double page dans la colonne de gauche.';
       return;
     }
     $('sheetCanvas').style.width = '';
@@ -1301,7 +1358,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     return found;
   }
   $('sheetCanvas').addEventListener('click', function (e) {
-    if (expMode() === 'spreads') return;
+    if (unitMode()) return;
     var c = cellAt(e); if (!c) return;
     S.sel = unitOf(c.p)[0]; selPhoto = null; markSel(); buildEditors(); render();
   });
@@ -1312,6 +1369,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   /* ---------- render scheduling ---------- */
   var raf = 0;
   function render() {
+    if (typeof scheduleSave === 'function') scheduleSave();
     if (raf) return;
     raf = requestAnimationFrame(function () {
       raf = 0; renderRail(); renderStage();
@@ -1338,8 +1396,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
       : S.mode === 'sheet8' ? '1 feuille ' + S.paper + ', un seul côté.'
       : S.n + ' feuille' + (S.n > 1 ? 's' : '') + ' ' + S.paper + ', une page chacune.');
     $('expFmt').value = S.expFmt; $('fmtWrap').hidden = S.mode !== 'booklet';
-    $('btnJpg').textContent = expMode() === 'spreads' ? 'JPG de cette double page' : 'JPG de cette planche';
-    if (expMode() === 'spreads') {
+    $('btnJpg').textContent = expMode() === 'pages' ? 'JPG des pages affichées' : (expMode() === 'spreads' ? 'JPG de cette double page' : 'JPG de cette planche');
+    if (expMode() === 'pages') {
+      $('expInfo').textContent = 'Pages de ' + pageLabel() + ' · le PDF contient ' + S.n + ' pages seules, de même taille, dans l’ordre du livre : couverture, pages 2 à ' + (S.n - 1) + ', 4e de couverture. Les photos fusionnées sont coupées au pli. À envoyer à un imprimeur.';
+    } else if (expMode() === 'spreads') {
       $('expInfo').textContent = 'Pages de ' + pageLabel() + ' · le PDF contient la couverture, ' + (units().length - 2) +
         ' doubles pages dans l’ordre de lecture, puis la 4e de couverture. À envoyer à un imprimeur, pas à plier soi-même.';
     }
@@ -1360,7 +1420,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   }
   var lastFocus = null;
   function closeOv() {
-    ['ovSheet', 'ovSet', 'ovFold'].forEach(function (id) { $(id).hidden = true; });
+    ['ovSheet', 'ovSet', 'ovFold', 'ovPrint', 'ovVer'].forEach(function (id) { $(id).hidden = true; });
     if (lastFocus && lastFocus.focus) lastFocus.focus();
     lastFocus = null;
   }
@@ -1372,7 +1432,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     var f = $(id).querySelector('button, select, input'); if (f) f.focus();
     render();
   }
-  ['ovSheet', 'ovSet', 'ovFold'].forEach(function (id) {
+  ['ovSheet', 'ovSet', 'ovFold', 'ovPrint', 'ovVer'].forEach(function (id) {
     $(id).addEventListener('click', function (e) {
       if (e.target === $(id) || e.target.hasAttribute('data-close')) closeOv();
     });
@@ -1382,6 +1442,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   $('btnSettings').addEventListener('click', function () { openOv('ovSet'); });
   $('lnkSettings').addEventListener('click', function () { openOv('ovSet'); });
   $('lnkFold').addEventListener('click', function () { openOv('ovFold'); });
+  $('btnPrint').addEventListener('click', function () { openOv('ovPrint'); updatePrintUi(); });
+  $('btnVer').addEventListener('click', function () { openOv('ovVer'); listVersions(); });
 
   $('expFmt').addEventListener('change', function (e) { S.expFmt = e.target.value; savePrefs(); updateGlobal(); buildChips(); render(); });
   $('title').addEventListener('input', function (e) { S.title = e.target.value.slice(0, 60); savePrefs(); });
@@ -1459,14 +1521,84 @@ button, input, select, textarea { font: inherit; color: inherit; }
       c.toBlob(function (b) { b ? res(b) : rej(new Error('image trop grande pour cet appareil, choisis une résolution plus basse')); }, 'image/jpeg', S.jq);
     });
   }
-  function makeJobs() {
-    var d = dims(), jobs = [];
-    if (expMode() === 'spreads') {
-      units().forEach(function (u) {
-        jobs.push({ w: d.page[0] * u.length, h: d.page[1], pages: u, draw: function (sc) {
-          return renderUnit(u, Math.round(d.page[0] * sc), Math.round(d.page[1] * sc), false).canvas;
-        } });
-      });
+  /* ---------- print: bleed, crop marks, cover ---------- */
+  function printOn() { return expMode() !== 'impose' || S.mode === 'flat'; }
+  function bleedMM() { return printOn() ? S.bleed : 0; }
+  function slugMM() { return printOn() && S.marks ? 7 : 0; }
+  function perfect() { return S.binding === 'perfect' && expMode() !== 'impose' && S.mode === 'booklet' && S.n >= 4; }
+  /* Extends the page by b pixels on every side by mirroring its edges. */
+  function withBleed(c0, pw, ph, b) {
+    if (!b) return c0;
+    var W = pw + 2 * b, H = ph + 2 * b, out = mkCanvas(W, H), x = out.getContext('2d');
+    x.drawImage(c0, b, b);
+    x.setTransform(-1, 0, 0, 1, 2 * b, 0); x.drawImage(c0, 0, 0, b, ph, b, b, b, ph);
+    x.setTransform(-1, 0, 0, 1, 2 * (b + pw), 0); x.drawImage(c0, pw - b, 0, b, ph, pw, b, b, ph);
+    x.setTransform(1, 0, 0, -1, 0, 2 * b); x.drawImage(out, 0, b, W, b, 0, b, W, b);
+    x.setTransform(1, 0, 0, -1, 0, 2 * (b + ph)); x.drawImage(out, 0, ph, W, b, 0, ph, W, b);
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    return out;
+  }
+  function drawMarks(x, W, H, P, B, sc, extra) {
+    var o = (B + 1.5) * sc, len = 4 * sc, x0 = P, x1 = W - P, y0 = P, y1 = H - P;
+    x.save(); x.strokeStyle = '#000'; x.lineWidth = Math.max(1.5, .12 * sc);
+    function ln(a, b, c, d) { x.beginPath(); x.moveTo(a, b); x.lineTo(c, d); x.stroke(); }
+    [[x0, y0, -1, -1], [x1, y0, 1, -1], [x0, y1, -1, 1], [x1, y1, 1, 1]].forEach(function (c) {
+      ln(c[0], c[1] + c[3] * o, c[0], c[1] + c[3] * (o + len));
+      ln(c[0] + c[2] * o, c[1], c[0] + c[2] * (o + len), c[1]);
+    });
+    (extra || []).forEach(function (ex) {
+      ln(ex, y0 - o, ex, y0 - o - len); ln(ex, y1 + o, ex, y1 + o + len);
+    });
+    x.restore();
+  }
+  /* pages: list of 1 or 2 page numbers shown side by side */
+  function composePages(list, sc) {
+    var d = dims(), B = bleedMM(), M = slugMM(), b = Math.round(B * sc), P = Math.round((B + M) * sc);
+    var pw = Math.round(d.page[0] * sc), ph = Math.round(d.page[1] * sc), n = list.length;
+    var W = pw * n + 2 * P, H = ph + 2 * P, c = mkCanvas(W, H), x = c.getContext('2d');
+    if (M) { x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); }
+    list.forEach(function (idx, k) {
+      var pc = withBleed(renderPage(idx, pw, ph, false).canvas, pw, ph, b);
+      if (n === 1 || !b) x.drawImage(pc, 0, 0, pc.width, pc.height, P - b + k * pw, P - b, pc.width, pc.height);
+      else if (k === 0) x.drawImage(pc, 0, 0, pw + b, pc.height, P - b, P - b, pw + b, pc.height);
+      else x.drawImage(pc, b, 0, pw + b, pc.height, P + pw, P - b, pw + b, pc.height);
+    });
+    if (M) drawMarks(x, W, H, P, B, sc);
+    return c;
+  }
+  function composeCover(sc) {
+    var d = dims(), B = bleedMM(), M = slugMM(), b = Math.round(B * sc), P = Math.round((B + M) * sc);
+    var pw = Math.round(d.page[0] * sc), ph = Math.round(d.page[1] * sc), sp = Math.round(S.spine * sc);
+    var W = 2 * pw + sp + 2 * P, H = ph + 2 * P, c = mkCanvas(W, H), x = c.getContext('2d');
+    if (M) { x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); }
+    var back = withBleed(renderPage(S.n - 1, pw, ph, false).canvas, pw, ph, b), front = withBleed(renderPage(0, pw, ph, false).canvas, pw, ph, b);
+    x.drawImage(back, 0, 0, pw + b, back.height, P - b, P - b, pw + b, back.height);
+    x.drawImage(front, b, 0, pw + b, front.height, P + pw + sp, P - b, pw + b, front.height);
+    var bg = BG[S.pages[0].bg] || BG.ink;
+    x.fillStyle = bg.fill; x.fillRect(P + pw, P - b, sp, ph + 2 * b);
+    if (S.spineText && S.spine >= 4 && S.title) {
+      x.save(); x.translate(P + pw + sp / 2, P + ph / 2); x.rotate(Math.PI / 2);
+      var fs = Math.min(sp * .5, ph * .06), f = FONTS.livre;
+      x.font = f.w + ' ' + fs + 'px ' + f.f; x.fillStyle = bg.text; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(S.title, 0, 0, ph * .8); x.restore();
+    }
+    if (M) drawMarks(x, W, H, P, B, sc, [P + pw, P + pw + sp]);
+    return c;
+  }
+  function makeDocs() {
+    var d = dims(), B = bleedMM(), M = slugMM(), mode = expMode(), docs = [], jobs = [], i;
+    function job(list) {
+      return { w: d.page[0] * list.length + 2 * (B + M), h: d.page[1] + 2 * (B + M), pages: list,
+        draw: function (sc) { return composePages(list, sc); } };
+    }
+    var pf = perfect(), suffix = mode === 'spreads' ? '-doubles-pages' : (mode === 'pages' ? '-pages' : '');
+    if (S.mode === 'flat') {
+      for (i = 0; i < S.n; i++) jobs.push(job([i]));
+    } else if (mode === 'pages') {
+      for (i = pf ? 1 : 0; i < (pf ? S.n - 1 : S.n); i++) jobs.push(job([i]));
+    } else if (mode === 'spreads') {
+      var us = units(); if (pf) us = us.slice(1, -1);
+      us.forEach(function (u) { jobs.push(job(u.slice())); });
     } else {
       groups().forEach(function (g) {
         g.sides.forEach(function (sd) {
@@ -1474,49 +1606,62 @@ button, input, select, textarea { font: inherit; color: inherit; }
         });
       });
     }
-    return jobs;
+    docs.push({ name: slug() + suffix + (pf ? '-interieur' : '') + '.pdf', jobs: jobs });
+    if (pf) docs.push({ name: slug() + '-couverture.pdf', jobs: [{ w: 2 * d.page[0] + S.spine + 2 * (B + M), h: d.page[1] + 2 * (B + M), pages: [0, S.n - 1], draw: composeCover }] });
+    return docs;
   }
   function exportPDF() {
     var J = window.jspdf && window.jspdf.jsPDF;
     if (!J) { setStatus("La bibliothèque PDF n'a pas chargé. Recharge la page."); return; }
     busy = true; updateExportUi();
-    var s = S.dpi / 25.4, jobs = makeJobs(), doc = null, k = 0;
-    fontsReady().then(function () {
+    var s = S.dpi / 25.4, docs = makeDocs(), total = 0, done = 0, chain;
+    docs.forEach(function (D) { total += D.jobs.length; });
+    function build(D) {
+      var doc = null, k = 0;
       function next() {
-        if (k >= jobs.length) return Promise.resolve();
-        setStatus('Page ' + (k + 1) + ' sur ' + jobs.length + (S.dpi >= 600 ? ' à 600 dpi, patience…' : '…'));
-        return tick().then(function () { return renderJob(jobs[k], s); }).then(canvasBlob).then(function (blob) {
+        if (k >= D.jobs.length) return Promise.resolve();
+        setStatus('Page ' + (done + 1) + ' sur ' + total + (S.dpi >= 600 ? ' à 600 dpi, patience…' : '…'));
+        return tick().then(function () { return renderJob(D.jobs[k], s); }).then(canvasBlob).then(function (blob) {
           return blob.arrayBuffer();
         }).then(function (ab) {
-          var j = jobs[k], o = j.w > j.h ? 'l' : 'p';
+          var j = D.jobs[k], o = j.w > j.h ? 'l' : 'p';
           if (!doc) doc = new J({ orientation: o, unit: 'mm', format: [j.w, j.h], compress: true });
           else doc.addPage([j.w, j.h], o);
-          doc.addImage(new Uint8Array(ab), 'JPEG', 0, 0, j.w, j.h, 'pg' + k, 'NONE');
-          k++; return next();
+          doc.addImage(new Uint8Array(ab), 'JPEG', 0, 0, j.w, j.h, 'pg' + done, 'NONE');
+          k++; done++; return next();
         });
       }
-      return next();
-    }).then(function () {
-      return dl.save({ filename: slug() + (expMode() === 'spreads' ? '-doubles-pages' : '') + '.pdf', data: doc.output('blob') });
-    }).then(function () { setStatus('PDF enregistré.'); })
+      return next().then(function () { return dl.save({ filename: D.name, data: doc.output('blob') }); });
+    }
+    chain = fontsReady();
+    docs.forEach(function (D) { chain = chain.then(function () { return build(D); }); });
+    chain.then(function () { setStatus(docs.length > 1 ? 'PDF enregistrés (intérieur et couverture).' : 'PDF enregistré.'); })
       .catch(function (e) { setStatus(explain(e)); })
       .then(function () { busy = false; updateExportUi(); });
   }
   function exportJPG() {
     busy = true; updateExportUi(); setStatus('Préparation du JPG…');
-    var s = S.dpi / 25.4, d = dims(), job, name;
-    if (expMode() === 'spreads') {
+    var s = S.dpi / 25.4, d = dims(), files = [], mode = expMode();
+    if (mode === 'pages') {
+      unitOf(S.sel).forEach(function (p) {
+        files.push({ name: slug() + '-page-' + (p + 1) + '.jpg', job: { pages: [p], draw: function (sc) { return composePages([p], sc); } } });
+      });
+    } else if (mode === 'spreads') {
       var u = unitOf(S.sel);
-      job = { pages: u, draw: function (sc) { return renderUnit(u, Math.round(d.page[0] * sc), Math.round(d.page[1] * sc), false).canvas; } };
-      name = slug() + (u.length === 2 ? '-pages-' + (u[0] + 1) + '-' + (u[1] + 1) : '-page-' + (u[0] + 1)) + '.jpg';
+      files.push({ name: slug() + (u.length === 2 ? '-pages-' + (u[0] + 1) + '-' + (u[1] + 1) : '-page-' + (u[0] + 1)) + '.jpg',
+        job: { pages: u, draw: function (sc) { return composePages(u, sc); } } });
     } else {
       var cur = currentSide();
-      job = { pages: cur.side.cells.map(function (c) { return c.p; }), draw: function (sc) { return renderSide(cur.side, sc); } };
-      name = slug() + (S.mode === 'flat' ? '-page-' + (S.sheet + 1) : S.mode === 'booklet' ? '-feuille-' + (S.sheet + 1) + '-' + cur.side.name : '') + '.jpg';
+      files.push({ name: slug() + (S.mode === 'flat' ? '-page-' + (S.sheet + 1) : S.mode === 'booklet' ? '-feuille-' + (S.sheet + 1) + '-' + cur.side.name : '') + '.jpg',
+        job: { pages: cur.side.cells.map(function (c) { return c.p; }), draw: function (sc) { return renderSide(cur.side, sc); } } });
     }
-    fontsReady().then(tick).then(function () { return renderJob(job, s); }).then(canvasBlob).then(function (blob) {
-      return dl.save({ filename: name, data: blob });
-    }).then(function () { setStatus('JPG enregistré.'); })
+    var chain = fontsReady().then(tick);
+    files.forEach(function (f) {
+      chain = chain.then(function () { return renderJob(f.job, s); }).then(canvasBlob).then(function (blob) {
+        return dl.save({ filename: f.name, data: blob });
+      });
+    });
+    chain.then(function () { setStatus(files.length > 1 ? 'JPG enregistrés.' : 'JPG enregistré.'); })
       .catch(function (e) { setStatus(explain(e)); })
       .then(function () { busy = false; updateExportUi(); });
   }
@@ -1534,6 +1679,241 @@ button, input, select, textarea { font: inherit; color: inherit; }
     });
   } };
   updateExportUi(); setStatus('Prêt à exporter.');
+
+
+
+  /* ---------- print dialog ---------- */
+  function sizeStr(a, b) { return fmt(a) + ' × ' + fmt(b) + ' mm'; }
+  function updatePrintUi() {
+    var d = dims(), on = printOn(), B = on ? S.bleed : 0, M = slugMM();
+    $('binding').value = S.binding; $('bleed').value = String(S.bleed); $('marks').checked = S.marks;
+    $('spine').value = S.spine; $('spineOut').textContent = fmt(S.spine) + ' mm'; $('spineText').checked = S.spineText;
+    $('spineBox').hidden = !perfect();
+    $('bindNote').textContent = S.binding === 'perfect'
+      ? 'Le PDF intérieur contient les pages 2 à ' + (S.n - 1) + '. Un second PDF réunit la 4e de couverture, le dos et la 1re de couverture.'
+      : 'Un seul PDF avec la couverture, l’intérieur et la 4e de couverture.';
+    $('bleed').disabled = $('marks').disabled = !on;
+    var w = '';
+    if (S.mode === 'sheet8') w = 'La feuille unique à plier ne peut pas avoir de fond perdu. Choisis « Livret agrafé » pour un fichier d’imprimeur.';
+    else if (!on) w = 'Fond perdu, traits de coupe et couverture avec dos : choisis l’export « Pages à la suite (imprimeur) » ou « Doubles pages » (en haut, à côté de Résolution).';
+    else if (S.binding === 'perfect' && !perfect()) w = 'Le dos carré collé demande le montage « Livret agrafé » avec l’export Pages à la suite ou Doubles pages.';
+    else if (S.n % 2) w = 'Le nombre de pages est impair : l’imprimeur voudra un nombre pair.';
+    $('printWarn').textContent = w;
+    var fw = d.page[0], fh = d.page[1];
+    $('printSum').textContent = on
+      ? 'Format fini : ' + sizeStr(fw, fh) + (B ? ' · avec fond perdu : ' + sizeStr(fw + 2 * B, fh + 2 * B) : '') + (M ? ' · avec traits de coupe : ' + sizeStr(fw + 2 * (B + M), fh + 2 * (B + M)) : '') + (perfect() ? ' · couverture à plat : ' + sizeStr(2 * fw + S.spine, fh) + ' (hors fond perdu)' : '') + ' · ' + S.n + ' pages · ' + S.dpi + ' dpi.'
+      : '';
+  }
+  $('binding').addEventListener('change', function (e) { S.binding = e.target.value; savePrefs(); updatePrintUi(); });
+  $('bleed').addEventListener('change', function (e) { S.bleed = parseInt(e.target.value, 10); savePrefs(); updatePrintUi(); });
+  $('marks').addEventListener('change', function (e) { S.marks = e.target.checked; savePrefs(); updatePrintUi(); });
+  $('spine').addEventListener('input', function (e) { S.spine = parseFloat(e.target.value); savePrefs(); updatePrintUi(); });
+  $('spineText').addEventListener('change', function (e) { S.spineText = e.target.checked; savePrefs(); });
+  function dpiReport() {
+    var d = dims(), mm = 10, w = d.page[0] * mm, h = d.page[1] * mm, out = [];
+    for (var i = 0; i < S.n; i++) {
+      if (ownerIdx(i) !== i) continue;
+      var pg = S.pages[i], sp = spreadSide(i), merged = !!(sp && S.pages[sp.lead].merge);
+      slotsFor(pg, merged ? sp.side : 0, merged ? 2 : 1, w, h, S.margin * mm).forEach(function (slot, s) {
+        var ph = pg.photos[s]; if (!ph || !ph.ow) return;
+        var iw = ph.src.width, ih = ph.src.height;
+        var base = ph.fit === 'cover' ? Math.max(slot.w / iw, slot.h / ih) : Math.min(slot.w / iw, slot.h / ih);
+        var shown = iw * base * ph.zoom / mm;
+        out.push({ page: i + 1, name: ph.name, dpi: Math.round(ph.ow / (shown / 25.4)) });
+      });
+    }
+    return out;
+  }
+  $('btnCheck').addEventListener('click', function () {
+    var r = dpiReport(), box = $('checkOut'); box.innerHTML = '';
+    if (!r.length) { box.textContent = 'Aucune photo dans le livre.'; return; }
+    var low = 0;
+    r.forEach(function (x) {
+      var p = document.createElement('div'); p.className = 'ckrow' + (x.dpi < 250 ? ' low' : '');
+      p.textContent = 'p. ' + x.page + ' · ' + x.name + ' · ' + x.dpi + ' dpi' + (x.dpi < 150 ? ' (trop faible)' : x.dpi < 250 ? ' (juste)' : ' (bon)');
+      if (x.dpi < 250) low++; box.appendChild(p);
+    });
+    var t = document.createElement('div'); t.style.marginTop = '6px';
+    t.textContent = low ? low + ' photo' + (low > 1 ? 's' : '') + ' sous 250 dpi : l’image risque d’être molle à l’impression. Réduis-la (zoom) ou prends un fichier plus grand.' : 'Toutes les photos sont à 250 dpi ou plus à leur taille actuelle.';
+    box.appendChild(t);
+  });
+
+  /* ---------- versions and autosave (IndexedDB) ---------- */
+  var DBNAME = 'presse-zine-db', ready = false, saveT = null;
+  function idb() {
+    return new Promise(function (res, rej) {
+      try {
+        var r = indexedDB.open(DBNAME, 1);
+        r.onupgradeneeded = function () { r.result.createObjectStore('versions', { keyPath: 'id' }); r.result.createObjectStore('blobs'); };
+        r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error); };
+      } catch (e) { rej(e); }
+    });
+  }
+  function rq(r) { return new Promise(function (res, rej) { r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error); }; }); }
+  function blobKey(f) { return [f.name, f.size, f.lastModified || 0, f.type].join('|'); }
+  var SKEYS = ['title', 'paper', 'mode', 'n', 'margin', 'number', 'guides', 'dpi', 'jq', 'expFmt', 'bleed', 'marks', 'binding', 'spine', 'spineText'];
+  var PKEYS = ['name', 'fit', 'zoom', 'px', 'py', 'bw', 'contrast', 'grain', 'opacity', 'bleed'];
+  function snapshot() {
+    var blobs = {}, data = { v: 1, S: {}, pages: [] };
+    SKEYS.forEach(function (k) { data.S[k] = S[k]; });
+    S.pages.forEach(function (p) {
+      var q = {}; Object.keys(p).forEach(function (k) { if (k !== 'photos') q[k] = p[k]; });
+      q.photos = p.photos.map(function (ph) {
+        var r = {}; PKEYS.forEach(function (k) { r[k] = ph[k]; });
+        if (ph.file) { r.key = blobKey(ph.file); blobs[r.key] = ph.file; }
+        return r;
+      });
+      data.pages.push(q);
+    });
+    return { data: data, blobs: blobs };
+  }
+  function putBlobs(db, blobs) {
+    var keys = Object.keys(blobs), chain = Promise.resolve();
+    keys.forEach(function (k) {
+      chain = chain.then(function () {
+        return rq(db.transaction('blobs').objectStore('blobs').count(k)).then(function (n) {
+          if (n) return null;
+          return rq(db.transaction('blobs', 'readwrite').objectStore('blobs').put(blobs[k], k));
+        });
+      });
+    });
+    return chain;
+  }
+  function thumb() {
+    try { var d = dims(), w = 120, c = renderPage(0, w, Math.round(w * d.page[1] / d.page[0]), false).canvas; return c.toDataURL('image/jpeg', .7); }
+    catch (e) { return ''; }
+  }
+  function saveRecord(id, name, withThumb) {
+    var snap = snapshot();
+    return idb().then(function (db) {
+      return putBlobs(db, snap.blobs).then(function () {
+        var rec = { id: id, name: name, ts: Date.now(), n: S.n, thumb: withThumb ? thumb() : '', data: snap.data };
+        return rq(db.transaction('versions', 'readwrite').objectStore('versions').put(rec));
+      }).then(function () { db.close(); });
+    });
+  }
+  function scheduleSave() {
+    if (!ready) return;
+    clearTimeout(saveT);
+    saveT = setTimeout(function () { saveRecord('autosave', 'Travail en cours', false).catch(function () {}); }, 2500);
+  }
+  function applyData(data, files) {
+    var cache = {}, keys = {};
+    data.pages.forEach(function (p) { p.photos.forEach(function (r) { if (r.key && files[r.key]) keys[r.key] = 1; }); });
+    return Promise.all(Object.keys(keys).map(function (k) { return loadImage(files[k]).then(function (c) { cache[k] = c; }); })).then(function () {
+      SKEYS.forEach(function (k) { if (data.S[k] !== undefined) S[k] = data.S[k]; });
+      var pages = data.pages.map(function (p) {
+        var np = Object.assign(newPage(), p);
+        np.photos = p.photos.filter(function (r) { return r.key && cache[r.key]; }).map(function (r) {
+          var ph = makePhoto(cache[r.key], r.name, files[r.key]);
+          PKEYS.forEach(function (k) { if (r[k] !== undefined) ph[k] = r[k]; });
+          return ph;
+        });
+        return np;
+      });
+      while (pages.length < MAXP) pages.push(newPage());
+      S.pages = pages.slice(0, MAXP); S.sel = 0; S.sheet = 0; S.side = 0; selPhoto = null; selText = null;
+      rebuild(); savePrefs();
+    });
+  }
+  function filesFor(db, data) {
+    var files = {}, chain = Promise.resolve();
+    data.pages.forEach(function (p) { p.photos.forEach(function (r) {
+      if (!r.key || files[r.key]) return; files[r.key] = null;
+      chain = chain.then(function () { return rq(db.transaction('blobs').objectStore('blobs').get(r.key)); }).then(function (b) { files[r.key] = b || null; });
+    }); });
+    return chain.then(function () { return files; });
+  }
+  function vmsg(t) { $('verStatus').textContent = t; setStatus(t); }
+  function listVersions() {
+    var box = $('verList'); box.innerHTML = '';
+    idb().then(function (db) { return rq(db.transaction('versions').objectStore('versions').getAll()).then(function (all) { db.close(); return all; }); })
+      .then(function (all) {
+        all = all.filter(function (r) { return r.id !== 'autosave'; }).sort(function (a, b) { return b.ts - a.ts; });
+        if (!all.length) { box.innerHTML = '<p class="hint">Aucune version enregistrée.</p>'; return; }
+        all.forEach(function (r) {
+          var row = document.createElement('div'); row.className = 'verrow';
+          var im = document.createElement('img'); im.alt = ''; if (r.thumb) im.src = r.thumb;
+          var mid = document.createElement('div'), b = document.createElement('b'), sp = document.createElement('span');
+          b.textContent = r.name; sp.textContent = new Date(r.ts).toLocaleString('fr-BE', { dateStyle: 'short', timeStyle: 'short' }) + ' · ' + r.n + ' pages';
+          mid.appendChild(b); mid.appendChild(sp);
+          var bt = document.createElement('div'); bt.className = 'verbtns';
+          var b1 = document.createElement('button'), b2 = document.createElement('button');
+          b1.type = b2.type = 'button'; b1.className = b2.className = 'btn small'; b1.textContent = 'Ouvrir'; b2.textContent = 'Supprimer';
+          b1.addEventListener('click', function () { restoreVersion(r.id, r.name); });
+          b2.addEventListener('click', function () { removeVersion(r.id, r.name); });
+          bt.appendChild(b1); bt.appendChild(b2);
+          row.appendChild(im); row.appendChild(mid); row.appendChild(bt); box.appendChild(row);
+        });
+      }).catch(function () { box.innerHTML = '<p class="hint">Les versions ne sont pas disponibles dans ce navigateur (navigation privée ?). Utilise « Exporter le projet ».</p>'; });
+  }
+  function stamp() { return new Date().toLocaleString('fr-BE', { dateStyle: 'short', timeStyle: 'short' }); }
+  $('btnVerSave').addEventListener('click', function () {
+    var name = $('verName').value.trim() || ('Version du ' + stamp());
+    vmsg('Enregistrement…');
+    saveRecord('v' + Date.now(), name, true).then(function () { $('verName').value = ''; vmsg('Version « ' + name + ' » enregistrée.'); listVersions(); })
+      .catch(function () { vmsg('Impossible d’enregistrer ici. Utilise « Exporter le projet ».'); });
+  });
+  function restoreVersion(id, name) {
+    vmsg('Ouverture de « ' + name + ' »…');
+    saveRecord('v' + Date.now(), 'Avant d’ouvrir « ' + name + ' » (' + stamp() + ')', true).then(function () {
+      return idb().then(function (db) {
+        return rq(db.transaction('versions').objectStore('versions').get(id)).then(function (rec) {
+          return filesFor(db, rec.data).then(function (files) { db.close(); return applyData(rec.data, files); });
+        });
+      });
+    }).then(function () { vmsg('« ' + name + ' » ouverte. Ton état précédent est gardé dans la liste.'); listVersions(); })
+      .catch(function () { vmsg('Impossible d’ouvrir cette version.'); });
+  }
+  function removeVersion(id, name) {
+    idb().then(function (db) {
+      return rq(db.transaction('versions', 'readwrite').objectStore('versions').delete(id)).then(function () {
+        return rq(db.transaction('versions').objectStore('versions').getAll());
+      }).then(function (all) {
+        var used = {}; all.forEach(function (r) { r.data.pages.forEach(function (p) { p.photos.forEach(function (x) { if (x.key) used[x.key] = 1; }); }); });
+        return rq(db.transaction('blobs').objectStore('blobs').getAllKeys()).then(function (ks) {
+          var ch = Promise.resolve();
+          ks.forEach(function (k) { if (!used[k]) ch = ch.then(function () { return rq(db.transaction('blobs', 'readwrite').objectStore('blobs').delete(k)); }); });
+          return ch;
+        });
+      }).then(function () { db.close(); });
+    }).then(function () { vmsg('« ' + name + ' » supprimée.'); listVersions(); }).catch(function () { vmsg('Suppression impossible.'); });
+  }
+  /* project file: 4 bytes header length, JSON header, then the photos one after the other */
+  $('btnProjOut').addEventListener('click', function () {
+    if (!dl) { vmsg('Export indisponible ici.'); return; }
+    var snap = snapshot(), keys = Object.keys(snap.blobs), parts = [], metas = [];
+    keys.forEach(function (k) { var b = snap.blobs[k]; metas.push({ k: k, size: b.size, type: b.type, name: b.name || 'photo', lm: b.lastModified || 0 }); });
+    var head = new TextEncoder().encode(JSON.stringify({ data: snap.data, blobs: metas })), len = new Uint8Array(4);
+    new DataView(len.buffer).setUint32(0, head.length);
+    parts.push(len, head); keys.forEach(function (k) { parts.push(snap.blobs[k]); });
+    dl.save({ filename: slug() + '.zine', data: new Blob(parts, { type: 'application/octet-stream' }) })
+      .then(function () { vmsg('Projet enregistré.'); }).catch(function (e) { vmsg(explain(e)); });
+  });
+  $('btnProjIn').addEventListener('click', function () { $('projFile').click(); });
+  $('projFile').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+    vmsg('Lecture du projet…');
+    f.slice(0, 4).arrayBuffer().then(function (ab) {
+      var hl = new DataView(ab).getUint32(0);
+      return f.slice(4, 4 + hl).text().then(function (t) {
+        var h = JSON.parse(t), off = 4 + hl, files = {};
+        h.blobs.forEach(function (m) {
+          files[m.k] = new File([f.slice(off, off + m.size)], m.name, { type: m.type, lastModified: m.lm }); off += m.size;
+        });
+        return saveRecord('v' + Date.now(), 'Avant d’ouvrir un projet (' + stamp() + ')', true).catch(function () {}).then(function () { return applyData(h.data, files); });
+      });
+    }).then(function () { vmsg('Projet ouvert.'); listVersions(); }).catch(function () { vmsg('Ce fichier n’est pas un projet .zine valide.'); });
+  });
+  /* restore the work in progress */
+  (function () {
+    idb().then(function (db) {
+      return rq(db.transaction('versions').objectStore('versions').get('autosave')).then(function (rec) {
+        if (!rec) { db.close(); return null; }
+        return filesFor(db, rec.data).then(function (files) { db.close(); return applyData(rec.data, files).then(function () { setStatus('Ton dernier travail a été rouvert.'); }); });
+      });
+    }).catch(function () {}).then(function () { ready = true; });
+  })();
 
   /* ---------- start ---------- */
   rebuild();
