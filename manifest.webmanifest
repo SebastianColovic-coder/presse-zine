@@ -1,0 +1,17 @@
+{
+  "name": "Presse Zine",
+  "short_name": "Presse Zine",
+  "description": "Éditeur de zines et de livres photo, export PDF pour l'imprimeur.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#121312",
+  "theme_color": "#121312",
+  "lang": "fr",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
